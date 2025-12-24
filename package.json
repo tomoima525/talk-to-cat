@@ -1,0 +1,27 @@
+{
+  "name": "xai-avatar",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev:server": "pnpm --filter @xai-avatar/server dev",
+    "dev:client": "pnpm --filter @xai-avatar/client dev",
+    "build:server": "pnpm --filter @xai-avatar/server build",
+    "build:client": "pnpm --filter @xai-avatar/client build",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.2",
+    "eslint": "^9.39.2",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-react": "^7.37.2",
+    "eslint-plugin-react-hooks": "^5.1.0",
+    "prettier": "^3.7.4",
+    "typescript": "^5.7.2",
+    "typescript-eslint": "^8.18.0"
+  },
+  "packageManager": "pnpm@10.15.0"
+}
