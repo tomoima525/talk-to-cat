@@ -3,6 +3,7 @@ import { useWebRTC } from "./hooks/useWebRTC";
 import { useAudioStream } from "./hooks/useAudioStream";
 import { ConnectionStatus } from "./components/ConnectionStatus";
 import { Transcript } from "./components/Transcript";
+import { AvatarPanel } from "./components/AvatarPanel";
 import type { Message, TranscriptEntry } from "./types/messages";
 
 function App() {
@@ -11,6 +12,20 @@ function App() {
   const isConnectedRef = useRef(false);
   const assistantTextRef = useRef("");
   const sendMessageRef = useRef<((message: Message) => void) | null>(null);
+
+  // Mock amplitude ref for testing (will be replaced with real audio amplitude)
+  const amplitudeRef = useRef(0);
+
+  // Temporary: Animate amplitude with sine wave for testing placeholder geometry
+  useEffect(() => {
+    let animationId: number;
+    const animate = () => {
+      amplitudeRef.current = (Math.sin(Date.now() / 200) + 1) / 2;
+      animationId = requestAnimationFrame(animate);
+    };
+    animate();
+    return () => cancelAnimationFrame(animationId);
+  }, []);
 
   const { isCapturing, startCapture, stopCapture, playAudio, stopPlayback } = useAudioStream();
 
@@ -222,30 +237,38 @@ function App() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white flex flex-col">
-      <header className="border-b border-gray-700 p-4">
-        <h1 className="text-xl font-semibold">XAI Avatar</h1>
-      </header>
+    <div className="grid grid-cols-[750px_1fr] h-screen bg-black">
+      {/* Left sidebar - Avatar */}
+      <div className="h-full border-r-2 border-gray-700">
+        <AvatarPanel amplitudeRef={amplitudeRef} />
+      </div>
 
-      <main className="flex-1 flex flex-col max-w-4xl mx-auto w-full">
-        <div className="p-4">
-          <ConnectionStatus
-            isConnected={isConnected}
-            isConnecting={isConnecting}
-            connectionQuality={connectionQuality}
-            onConnect={handleConnect}
-            onDisconnect={handleDisconnect}
-          />
-          {isCapturing && (
-            <div className="mt-2 text-sm text-green-400 flex items-center gap-2">
-              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-              Microphone active
-            </div>
-          )}
-        </div>
+      {/* Right content area */}
+      <div className="flex flex-col overflow-hidden">
+        <header className="border-b border-gray-700 p-4">
+          <h1 className="text-xl font-semibold text-white">XAI Avatar</h1>
+        </header>
 
-        <Transcript entries={displayTranscripts} />
-      </main>
+        <main className="flex-1 flex flex-col overflow-hidden">
+          <div className="p-4">
+            <ConnectionStatus
+              isConnected={isConnected}
+              isConnecting={isConnecting}
+              connectionQuality={connectionQuality}
+              onConnect={handleConnect}
+              onDisconnect={handleDisconnect}
+            />
+            {isCapturing && (
+              <div className="mt-2 text-sm text-green-400 flex items-center gap-2">
+                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                Microphone active
+              </div>
+            )}
+          </div>
+
+          <Transcript entries={displayTranscripts} />
+        </main>
+      </div>
     </div>
   );
 }

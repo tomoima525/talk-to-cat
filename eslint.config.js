@@ -24,6 +24,30 @@ export default tseslint.config(
       ...reactPlugin.configs.recommended.rules,
       ...reactHooksPlugin.configs.recommended.rules,
       "react/react-in-jsx-scope": "off",
+      // Allow Three.js/R3F JSX properties
+      "react/no-unknown-property": [
+        "error",
+        {
+          ignore: [
+            "args",
+            "position",
+            "rotation",
+            "scale",
+            "intensity",
+            "color",
+            "flatShading",
+            "metalness",
+            "roughness",
+            "geometry",
+            "material",
+            "castShadow",
+            "receiveShadow",
+            "dispose",
+            "attach",
+            "object",
+          ],
+        },
+      ],
     },
     settings: {
       react: {
