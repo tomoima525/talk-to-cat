@@ -85,6 +85,25 @@ export interface InputAudioBufferCommittedMessage extends BaseMessage {
   item_id?: string;
 }
 
+export interface InputAudioTranscriptionCompletedMessage extends BaseMessage {
+  type: "conversation.item.input_audio_transcription.completed";
+  item_id?: string;
+  transcript: string;
+}
+
+export interface ConversationItemAddedMessage extends BaseMessage {
+  type: "conversation.item.added";
+  item?: {
+    id?: string;
+    role?: "user" | "assistant";
+    content?: Array<{
+      type: string;
+      transcript?: string;
+      text?: string;
+    }>;
+  };
+}
+
 // Union type for all messages
 export type Message =
   | AudioAppendMessage
@@ -101,6 +120,8 @@ export type Message =
   | ResponseDoneMessage
   | ErrorMessage
   | InputAudioBufferCommittedMessage
+  | InputAudioTranscriptionCompletedMessage
+  | ConversationItemAddedMessage
   | BaseMessage;
 
 // Debug log entry

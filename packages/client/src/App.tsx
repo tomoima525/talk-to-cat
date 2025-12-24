@@ -12,96 +12,149 @@ function App() {
   const assistantTextRef = useRef("");
   const sendMessageRef = useRef<((message: Message) => void) | null>(null);
 
-  const {
-    isCapturing,
-    startCapture,
-    stopCapture,
-    playAudio,
-    stopPlayback,
-  } = useAudioStream();
+  const { isCapturing, startCapture, stopCapture, playAudio, stopPlayback } = useAudioStream();
 
-  const handleMessage = useCallback((message: Message) => {
-    switch (message.type) {
-      case "response.output_audio.delta": {
-        // Play audio from server
-        const delta = (message as { delta: string }).delta;
-        playAudio(delta);
-        break;
-      }
-      case "response.output_audio_transcript.delta": {
-        const delta = (message as { delta: string }).delta;
-        assistantTextRef.current += delta;
-        setCurrentAssistantText(assistantTextRef.current);
-        break;
-      }
-      case "response.done": {
-        const text = assistantTextRef.current.trim();
-        if (text) {
-          // Prevent duplicate entries by checking if text was already added
+  const handleMessage = useCallback(
+    (message: Message) => {
+      switch (message.type) {
+        case "response.output_audio.delta": {
+          // Play audio from server
+          const delta = (message as { delta: string }).delta;
+          playAudio(delta);
+          break;
+        }
+        case "response.output_audio_transcript.delta": {
+          const delta = (message as { delta: string }).delta;
+          assistantTextRef.current += delta;
+          setCurrentAssistantText(assistantTextRef.current);
+          break;
+        }
+        case "response.done": {
+          const text = assistantTextRef.current.trim();
+          if (text) {
+            // Prevent duplicate entries by checking if text was already added
+            setTranscripts((entries) => {
+              const lastEntry = entries[entries.length - 1];
+              if (lastEntry?.role === "assistant" && lastEntry?.content === text) {
+                return entries; // Skip duplicate
+              }
+              return [
+                ...entries,
+                {
+                  timestamp: new Date().toISOString(),
+                  role: "assistant",
+                  content: text,
+                },
+              ];
+            });
+          }
+          // Clear streaming state
+          assistantTextRef.current = "";
+          setCurrentAssistantText("");
+          break;
+        }
+        case "input_audio_buffer.speech_started": {
+          // User started speaking - stop any playing audio (interruption)
+          stopPlayback();
+          console.log("User interrupted - stopping playback");
+
+          // Add a user entry immediately with "..." placeholder
+          // Only add if the last entry isn't already a pending user entry
           setTranscripts((entries) => {
             const lastEntry = entries[entries.length - 1];
-            if (lastEntry?.role === "assistant" && lastEntry?.content === text) {
-              return entries; // Skip duplicate
+            if (lastEntry?.role === "user" && (lastEntry?.content === "..." || lastEntry?.content === "")) {
+              return entries; // Already have a pending user entry
             }
             return [
               ...entries,
               {
                 timestamp: new Date().toISOString(),
-                role: "assistant",
-                content: text,
+                role: "user",
+                content: "...",
               },
             ];
           });
+          break;
         }
-        // Clear streaming state
-        assistantTextRef.current = "";
-        setCurrentAssistantText("");
-        break;
-      }
-      case "input_audio_buffer.speech_started": {
-        // User started speaking - stop any playing audio
-        stopPlayback();
-        break;
-      }
-      case "input_audio_buffer.speech_stopped": {
-        // User stopped speaking
-        break;
-      }
-      case "input_audio_buffer.committed": {
-        // Audio committed - add user message placeholder
-        setTranscripts((entries) => {
-          // Prevent duplicate user placeholders
-          const lastEntry = entries[entries.length - 1];
-          if (lastEntry?.role === "user" && lastEntry?.content === "[Speaking...]") {
-            return entries; // Skip duplicate
+        case "input_audio_buffer.speech_stopped": {
+          // User stopped speaking - transcript will come in conversation.item.added
+          break;
+        }
+        case "input_audio_buffer.committed": {
+          // User finished speaking - transcript will arrive via conversation.item.added
+          break;
+        }
+        case "conversation.item.added": {
+          console.log("conversation.item.added", JSON.stringify(message, null, 2));
+          // Handle conversation item created (contains user transcript)
+          // Consolidate all user transcripts into a single bubble until assistant responds
+          const item = (message as { item?: { role?: string; content?: Array<{ type: string; transcript?: string }> } })
+            .item;
+          if (item?.role === "user" && item?.content) {
+            for (const content of item.content) {
+              if (content.type === "input_audio" && content.transcript) {
+                const transcript = content.transcript;
+                setTranscripts((entries) => {
+                  // If the last entry is from user, update it (consolidate until assistant responds)
+                  const lastEntry = entries[entries.length - 1];
+                  if (lastEntry?.role === "user") {
+                    const newEntries = [...entries];
+                    // Append new transcript to existing content (separated by space if not placeholder)
+                    const existingContent = lastEntry.content === "..." ? "" : lastEntry.content + " ";
+                    newEntries[newEntries.length - 1] = {
+                      ...lastEntry,
+                      content: existingContent + transcript,
+                    };
+                    return newEntries;
+                  }
+                  // Otherwise add a new user entry
+                  return [
+                    ...entries,
+                    {
+                      timestamp: new Date().toISOString(),
+                      role: "user",
+                      content: transcript,
+                    },
+                  ];
+                });
+                break; // Only process the first transcript content
+              }
+            }
           }
-          return [
-            ...entries,
-            {
-              timestamp: new Date().toISOString(),
-              role: "user",
-              content: "[Speaking...]",
-            },
-          ];
-        });
-        break;
+          break;
+        }
+        case "conversation.item.input_audio_transcription.completed": {
+          // Fallback: Update the user's "..." placeholder with actual transcript
+          const transcript = (message as { transcript: string }).transcript;
+          if (transcript) {
+            setTranscripts((entries) => {
+              // Find the last user message with "..." and update it
+              const newEntries = [...entries];
+              for (let i = newEntries.length - 1; i >= 0; i--) {
+                if (newEntries[i].role === "user" && newEntries[i].content === "...") {
+                  newEntries[i] = {
+                    ...newEntries[i],
+                    content: transcript,
+                  };
+                  break;
+                }
+              }
+              return newEntries;
+            });
+          }
+          break;
+        }
+        case "error": {
+          const errorMsg = (message as { error?: { message?: string } }).error?.message || "Unknown error";
+          console.error("Server error:", errorMsg);
+          break;
+        }
       }
-      case "error": {
-        const errorMsg = (message as { error?: { message?: string } }).error?.message || "Unknown error";
-        console.error("Server error:", errorMsg);
-        break;
-      }
-    }
-  }, [playAudio, stopPlayback]);
+    },
+    [playAudio, stopPlayback]
+  );
 
-  const {
-    isConnected,
-    isConnecting,
-    connect,
-    disconnect,
-    sendMessage,
-    connectionQuality,
-  } = useWebRTC(handleMessage);
+  const { isConnected, isConnecting, connect, disconnect, sendMessage, connectionQuality } = useWebRTC(handleMessage);
 
   // Track connection state and sendMessage in refs for use in audio callback
   useEffect(() => {
