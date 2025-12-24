@@ -3,7 +3,10 @@
     "allow": [
       "Bash(mkdir:*)",
       "Bash(pnpm run lint)",
-      "Bash(tree:*)"
+      "Bash(tree:*)",
+      "Bash(pnpm install)",
+      "Bash(pnpm lint)",
+      "Bash(pnpm lint:*)"
     ]
   }
 }

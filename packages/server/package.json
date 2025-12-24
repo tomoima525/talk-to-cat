@@ -9,10 +9,15 @@
   },
   "dependencies": {
     "hono": "^4.11.1",
-    "@hono/node-server": "^1.19.7"
+    "@hono/node-server": "^1.19.7",
+    "@hono/node-ws": "^1.0.5",
+    "dotenv": "^16.4.7",
+    "ws": "^8.18.0",
+    "werift": "^0.21.16"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
+    "@types/ws": "^8.5.13",
     "tsx": "^4.19.0",
     "typescript": "^5.7.2"
   }

@@ -1,13 +1,13 @@
 # XAI Avatar
 
-A monorepo project with Hono server and Vite + React client.
+A monorepo project for XAI Voice WebRTC integration with a Hono server and Vite + React client.
 
 ## Structure
 
 ```
 packages/
 ├── client/   # Vite + React frontend
-└── server/   # Hono backend
+└── server/   # Hono backend with WebRTC/WebSocket support
 ```
 
 ## Getting Started
@@ -16,10 +16,40 @@ packages/
 # Install dependencies
 pnpm install
 
+# Set up environment variables
+cp packages/server/.env.example packages/server/.env
+# Edit .env with your XAI_API_KEY
+
 # Start development servers
-pnpm dev:server   # http://localhost:3001
+pnpm dev:server   # http://localhost:8000
 pnpm dev:client   # http://localhost:5173
 ```
+
+## Environment Variables
+
+Create a `.env` file in `packages/server/`:
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `XAI_API_KEY` | Your XAI API key | Required |
+| `API_URL` | XAI realtime API URL | `wss://api.x.ai/v1/realtime` |
+| `PORT` | Server port | `8000` |
+| `VOICE` | Voice model to use | `ara` |
+| `INSTRUCTIONS` | System instructions for the voice assistant | Default prompt |
+| `ALLOWED_ORIGINS` | CORS allowed origins | `http://localhost:3000,http://localhost:5173,http://localhost:8080` |
+
+## API Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/` | GET | Service info |
+| `/health` | GET | Health check |
+| `/session` | POST | Get ephemeral token for direct XAI API connection |
+| `/sessions` | GET | List all active sessions |
+| `/sessions` | POST | Create a new WebRTC session |
+| `/sessions/:id` | DELETE | Delete a session |
+| `/sessions/:id/stats` | GET | Get WebRTC stats for a session |
+| `/signaling/:id` | WebSocket | WebRTC signaling endpoint |
 
 ## Scripts
 
