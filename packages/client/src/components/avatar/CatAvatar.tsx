@@ -35,7 +35,7 @@ export function CatAvatar({ amplitudeRef }: LowPolyHeadProps) {
 
   // Mouth path changes based on amplitude (0 = closed, 1 = fully open)
   const mouthHeight = 2 + mouthOpen * 10;
-  const mouthY = 72 + mouthOpen * 3;
+  const mouthY = 67 + mouthOpen * 3;
 
   return (
     <div className="relative w-full h-full flex items-center justify-center">
@@ -76,10 +76,6 @@ export function CatAvatar({ amplitudeRef }: LowPolyHeadProps) {
         <ellipse cx="62" cy="50" rx="4" ry="5" fill="#4fc3f7" />
         <ellipse cx="63" cy="49" rx="1.5" ry="2" fill="#ffffff" />
 
-        {/* Nose */}
-        {/* <polygon points="50,56 46,62 54,62" fill="#2a2a2a" /> */}
-        <polygon points="50,62 46,56 54,56" fill="#2a2a2a" />
-
         {/* Mouth - animated based on amplitude */}
         <ellipse
           cx="50"
@@ -89,6 +85,15 @@ export function CatAvatar({ amplitudeRef }: LowPolyHeadProps) {
           fill="#FF0004"
           style={{ transition: "ry 0.05s ease-out, cy 0.05s ease-out" }}
         />
+        <ellipse cx="54" cy="63" rx="4.5" ry="4" fill="#2a2a2a" />
+        <ellipse cx="55" cy="62" rx="4" ry="3.5" fill="#3a3a3a" />
+        <ellipse cx="46" cy="63" rx="4.5" ry="4" fill="#2a2a2a" />
+        <ellipse cx="45" cy="62" rx="4" ry="3.5" fill="#3a3a3a" />
+
+        {/* Nose */}
+        {/* <polygon points="50,56 46,62 54,62" fill="#2a2a2a" /> */}
+        <polygon points="50,62 46,56 54,56" fill="#2a2a2a" />
+
         {/* Whiskers - Left */}
         <line x1="15" y1="58" x2="32" y2="60" stroke="#5a5a5a" strokeWidth="0.8" className="animate-whisker" />
         <line x1="15" y1="63" x2="32" y2="63" stroke="#5a5a5a" strokeWidth="0.8" className="animate-whisker" />
