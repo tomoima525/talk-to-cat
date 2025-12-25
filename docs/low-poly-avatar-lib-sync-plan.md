@@ -1,38 +1,24 @@
 ---
-name: Low-Poly Avatar Lip-Sync
-overview: Add a Three.js-based low-polygon 3D avatar that synchronizes mouth movements with AI audio output by analyzing audio amplitude in real-time during playback.
+name: Cat Avatar Lip-Sync
+overview: Add an SVG-based cat avatar that synchronizes mouth movements with AI audio output by analyzing audio amplitude in real-time during playback. (Changed from Three.js to SVG approach for simplicity)
 todos:
-  - id: install-deps
-    content: Install @react-three/fiber, @react-three/drei, and three packages
+  - id: cat-avatar
+    content: Create CatAvatar.tsx with SVG cat face and mouth animation
     status: done
-  - id: create-glb-model
-    content: Create low-poly head GLB model with mouth morph target in Blender
-    status: pending
+  - id: avatar-panel
+    content: Update AvatarPanel to use CatAvatar with CSS animations
+    status: done
+  - id: integrate-app
+    content: Integrate avatar panel into App.tsx layout with mock amplitude ref
+    status: done
   - id: audio-amplitude
     content: Create useAudioAmplitude hook with AnalyserNode for real-time analysis
     status: pending
-    dependencies:
-      - install-deps
   - id: modify-audio-stream
     content: Update useAudioStream to connect AnalyserNode to audio graph
     status: pending
     dependencies:
       - audio-amplitude
-  - id: avatar-3d
-    content: Create Avatar3D component with placeholder geometry (GLB model pending)
-    status: done
-    dependencies:
-      - install-deps
-  - id: avatar-panel
-    content: Create AvatarPanel container component
-    status: done
-    dependencies:
-      - avatar-3d
-  - id: integrate-app
-    content: Integrate avatar panel into App.tsx layout with mock amplitude ref
-    status: done
-    dependencies:
-      - avatar-panel
 ---
 
 # Low-Polygon Avatar with Lip-Sync - Technical Design Document

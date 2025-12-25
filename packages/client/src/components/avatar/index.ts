@@ -1,3 +1,2 @@
-export { Avatar3D } from './Avatar3D';
-export { LowPolyHead } from './LowPolyHead';
+export { CatAvatar } from './CatAvatar';
 export type { AvatarProps, LowPolyHeadProps, HeadMorphTargets } from './types';

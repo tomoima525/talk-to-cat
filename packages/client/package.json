@@ -8,18 +8,14 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@react-three/drei": "^10.7.7",
-    "@react-three/fiber": "^9.4.2",
     "@xai-avatar/shared": "workspace:*",
     "react": "^19.2.3",
-    "react-dom": "^19.2.3",
-    "three": "^0.182.0"
+    "react-dom": "^19.2.3"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.1.18",
     "@types/react": "^19.2.3",
     "@types/react-dom": "^19.2.3",
-    "@types/three": "^0.182.0",
     "@vitejs/plugin-react": "^4.3.0",
     "autoprefixer": "^10.4.23",
     "postcss": "^8.5.6",

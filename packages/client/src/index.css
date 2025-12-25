@@ -1,1 +1,62 @@
 @import "tailwindcss";
+
+/* Cat Avatar Animations */
+@keyframes breathe {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+}
+
+@keyframes ear-twitch-left {
+  0%, 90%, 100% {
+    transform: rotate(0deg);
+  }
+  93% {
+    transform: rotate(-5deg);
+  }
+  96% {
+    transform: rotate(0deg);
+  }
+}
+
+@keyframes ear-twitch-right {
+  0%, 85%, 100% {
+    transform: rotate(0deg);
+  }
+  88% {
+    transform: rotate(5deg);
+  }
+  91% {
+    transform: rotate(0deg);
+  }
+}
+
+@keyframes whisker-wiggle {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(0.5px);
+  }
+}
+
+.animate-breathe {
+  animation: breathe 4s ease-in-out infinite;
+}
+
+.animate-ear-twitch-left {
+  transform-origin: 35px 35px;
+  animation: ear-twitch-left 8s ease-in-out infinite;
+}
+
+.animate-ear-twitch-right {
+  transform-origin: 65px 35px;
+  animation: ear-twitch-right 8s ease-in-out infinite;
+}
+
+.animate-whisker {
+  animation: whisker-wiggle 3s ease-in-out infinite;
+}
