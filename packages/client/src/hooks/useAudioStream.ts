@@ -7,22 +7,32 @@ import { float32ToPCM16Base64, base64PCM16ToFloat32 } from "../utils/audio";
 
 const CHUNK_DURATION_MS = 100;
 
+interface UseAudioStreamOptions {
+  /** Optional callback to create an AnalyserNode using the stream's AudioContext */
+  createAnalyser?: (audioContext: AudioContext) => AnalyserNode;
+}
+
 interface UseAudioStreamReturn {
   isCapturing: boolean;
+  isPlaying: boolean;
   startCapture: (onAudioData: (base64Audio: string) => void) => Promise<number>;
   stopCapture: () => void;
   stopPlayback: () => void;
   playAudio: (base64Audio: string) => void;
   audioLevel: number;
   sampleRate: number;
+  /** Get the AudioContext used for playback (creates one if not exists) */
+  getAudioContext: () => AudioContext;
 }
 
-export function useAudioStream(): UseAudioStreamReturn {
+export function useAudioStream({ createAnalyser }: UseAudioStreamOptions = {}): UseAudioStreamReturn {
   const [isCapturing, setIsCapturing] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
   const [audioLevel, setAudioLevel] = useState(0);
   const [sampleRate, setSampleRate] = useState(0);
 
   const audioContextRef = useRef<AudioContext | null>(null);
+  const analyserNodeRef = useRef<AnalyserNode | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const sourceNodeRef = useRef<MediaStreamAudioSourceNode | null>(null);
   const processorNodeRef = useRef<ScriptProcessorNode | null>(null);
@@ -38,9 +48,15 @@ export function useAudioStream(): UseAudioStreamReturn {
       const nativeSampleRate = audioContextRef.current.sampleRate;
       setSampleRate(nativeSampleRate);
       console.log(`Audio context initialized with native sample rate: ${nativeSampleRate}Hz`);
+
+      // Create analyser node if callback provided
+      if (createAnalyser && !analyserNodeRef.current) {
+        analyserNodeRef.current = createAnalyser(audioContextRef.current);
+        console.log("Analyser node created for lip-sync");
+      }
     }
     return audioContextRef.current;
-  }, []);
+  }, [createAnalyser]);
 
   // Start audio capture - returns the detected sample rate
   const startCapture = useCallback(
@@ -183,6 +199,7 @@ export function useAudioStream(): UseAudioStreamReturn {
     // Clear the playback queue
     playbackQueueRef.current = [];
     isPlayingRef.current = false;
+    setIsPlaying(false);
     console.log("Audio playback stopped (interrupted)");
   }, []);
 
@@ -190,6 +207,7 @@ export function useAudioStream(): UseAudioStreamReturn {
   const playNextChunk = useCallback((audioContext: AudioContext) => {
     if (playbackQueueRef.current.length === 0) {
       isPlayingRef.current = false;
+      setIsPlaying(false);
       currentPlaybackSourceRef.current = null;
       return;
     }
@@ -205,7 +223,14 @@ export function useAudioStream(): UseAudioStreamReturn {
 
     const source = audioContext.createBufferSource();
     source.buffer = audioBuffer;
-    source.connect(audioContext.destination);
+
+    // Connect through analyser if available, otherwise direct to destination
+    if (analyserNodeRef.current) {
+      source.connect(analyserNodeRef.current);
+      analyserNodeRef.current.connect(audioContext.destination);
+    } else {
+      source.connect(audioContext.destination);
+    }
 
     // Store reference to current source for interruption handling
     currentPlaybackSourceRef.current = source;
@@ -236,6 +261,7 @@ export function useAudioStream(): UseAudioStreamReturn {
         // Start playback if not already playing
         if (!isPlayingRef.current) {
           isPlayingRef.current = true;
+          setIsPlaying(true);
           playNextChunk(audioContext);
         }
       } catch (error) {
@@ -257,11 +283,13 @@ export function useAudioStream(): UseAudioStreamReturn {
 
   return {
     isCapturing,
+    isPlaying,
     startCapture,
     stopCapture,
     stopPlayback,
     playAudio,
     audioLevel,
     sampleRate,
+    getAudioContext,
   };
 }

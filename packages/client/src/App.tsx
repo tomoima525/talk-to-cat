@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useWebRTC } from "./hooks/useWebRTC";
 import { useAudioStream } from "./hooks/useAudioStream";
+import { useAudioAmplitude } from "./hooks/useAudioAmplitude";
 import { ConnectionStatus } from "./components/ConnectionStatus";
 import { Transcript } from "./components/Transcript";
 import { AvatarPanel } from "./components/AvatarPanel";
@@ -13,21 +14,20 @@ function App() {
   const assistantTextRef = useRef("");
   const sendMessageRef = useRef<((message: Message) => void) | null>(null);
 
-  // Mock amplitude ref for testing (will be replaced with real audio amplitude)
-  const amplitudeRef = useRef(0);
+  // Audio amplitude analysis for lip-sync animation
+  const { amplitudeRef, createAnalyser, startSampling, stopSampling } = useAudioAmplitude();
 
-  // Temporary: Animate amplitude with sine wave for testing placeholder geometry
+  // Pass createAnalyser to useAudioStream so it uses the same AudioContext
+  const { isCapturing, isPlaying, startCapture, stopCapture, playAudio, stopPlayback } = useAudioStream({ createAnalyser });
+
+  // Start/stop amplitude sampling based on playback state
   useEffect(() => {
-    let animationId: number;
-    const animate = () => {
-      amplitudeRef.current = (Math.sin(Date.now() / 200) + 1) / 2;
-      animationId = requestAnimationFrame(animate);
-    };
-    animate();
-    return () => cancelAnimationFrame(animationId);
-  }, []);
-
-  const { isCapturing, startCapture, stopCapture, playAudio, stopPlayback } = useAudioStream();
+    if (isPlaying) {
+      startSampling();
+    } else {
+      stopSampling();
+    }
+  }, [isPlaying, startSampling, stopSampling]);
 
   const handleMessage = useCallback(
     (message: Message) => {
@@ -245,10 +245,6 @@ function App() {
 
       {/* Right content area */}
       <div className="flex flex-col overflow-hidden">
-        <header className="border-b border-gray-700 p-4">
-          <h1 className="text-xl font-semibold text-white">XAI Avatar</h1>
-        </header>
-
         <main className="flex-1 flex flex-col overflow-hidden">
           <div className="p-4">
             <ConnectionStatus

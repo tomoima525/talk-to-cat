@@ -1,18 +1,25 @@
-import { useEffect, useRef, useState } from 'react';
-import { LowPolyHeadProps } from './types';
+import { useEffect, useRef, useReducer } from "react";
+import { LowPolyHeadProps } from "./types";
 
 /**
  * SVG Cat Avatar with mouth animation driven by audio amplitude.
  * Replaces the Three.js approach with a simpler CSS/SVG solution.
  */
 export function CatAvatar({ amplitudeRef }: LowPolyHeadProps) {
-  const [mouthOpen, setMouthOpen] = useState(0);
+  // Use useReducer to force re-renders on every amplitude change
+  const [, forceUpdate] = useReducer((x) => x + 1, 0);
+  const mouthOpenRef = useRef(0);
   const animationRef = useRef<number | null>(null);
 
-  // Sync amplitude ref to React state for SVG animation
+  // Sync amplitude ref to local ref and force re-render
   useEffect(() => {
     const updateMouth = () => {
-      setMouthOpen(amplitudeRef.current);
+      const newValue = amplitudeRef.current;
+      // Only update if value changed significantly (avoid unnecessary re-renders)
+      if (Math.abs(newValue - mouthOpenRef.current) > 0.001) {
+        mouthOpenRef.current = newValue;
+        forceUpdate();
+      }
       animationRef.current = requestAnimationFrame(updateMouth);
     };
     animationRef.current = requestAnimationFrame(updateMouth);
@@ -24,16 +31,15 @@ export function CatAvatar({ amplitudeRef }: LowPolyHeadProps) {
     };
   }, [amplitudeRef]);
 
+  const mouthOpen = mouthOpenRef.current;
+
   // Mouth path changes based on amplitude (0 = closed, 1 = fully open)
-  const mouthHeight = 2 + mouthOpen * 15;
-  const mouthY = 62 + mouthOpen * 3;
+  const mouthHeight = 2 + mouthOpen * 10;
+  const mouthY = 72 + mouthOpen * 3;
 
   return (
     <div className="relative w-full h-full flex items-center justify-center">
-      <svg
-        viewBox="0 0 100 100"
-        className="w-[80%] h-[80%] max-w-[400px] max-h-[400px] animate-breathe"
-      >
+      <svg viewBox="0 0 100 100" className="w-[80%] h-[80%] max-w-[400px] max-h-[400px] animate-breathe">
         {/* Definitions for gradients */}
         <defs>
           <linearGradient id="catFur" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -47,19 +53,11 @@ export function CatAvatar({ amplitudeRef }: LowPolyHeadProps) {
         </defs>
 
         {/* Left Ear */}
-        <polygon
-          points="20,35 35,5 45,35"
-          fill="url(#catFur)"
-          className="animate-ear-twitch-left"
-        />
+        <polygon points="20,35 35,5 45,35" fill="url(#catFur)" className="animate-ear-twitch-left" />
         <polygon points="25,32 35,12 42,32" fill="url(#earInner)" />
 
         {/* Right Ear */}
-        <polygon
-          points="55,35 65,5 80,35"
-          fill="url(#catFur)"
-          className="animate-ear-twitch-right"
-        />
+        <polygon points="55,35 65,5 80,35" fill="url(#catFur)" className="animate-ear-twitch-right" />
         <polygon points="58,32 65,12 75,32" fill="url(#earInner)" />
 
         {/* Head - rounded shape made with ellipse */}
@@ -79,75 +77,27 @@ export function CatAvatar({ amplitudeRef }: LowPolyHeadProps) {
         <ellipse cx="63" cy="49" rx="1.5" ry="2" fill="#ffffff" />
 
         {/* Nose */}
-        <polygon points="50,56 46,62 54,62" fill="#2a2a2a" />
+        {/* <polygon points="50,56 46,62 54,62" fill="#2a2a2a" /> */}
+        <polygon points="50,62 46,56 54,56" fill="#2a2a2a" />
 
         {/* Mouth - animated based on amplitude */}
         <ellipse
           cx="50"
           cy={mouthY}
-          rx="8"
+          rx="6"
           ry={mouthHeight}
-          fill="#1a1a1a"
-          style={{ transition: 'ry 0.05s ease-out, cy 0.05s ease-out' }}
+          fill="#FF0004"
+          style={{ transition: "ry 0.05s ease-out, cy 0.05s ease-out" }}
         />
-
         {/* Whiskers - Left */}
-        <line
-          x1="15"
-          y1="58"
-          x2="32"
-          y2="60"
-          stroke="#5a5a5a"
-          strokeWidth="0.8"
-          className="animate-whisker"
-        />
-        <line
-          x1="15"
-          y1="63"
-          x2="32"
-          y2="63"
-          stroke="#5a5a5a"
-          strokeWidth="0.8"
-          className="animate-whisker"
-        />
-        <line
-          x1="15"
-          y1="68"
-          x2="32"
-          y2="66"
-          stroke="#5a5a5a"
-          strokeWidth="0.8"
-          className="animate-whisker"
-        />
+        <line x1="15" y1="58" x2="32" y2="60" stroke="#5a5a5a" strokeWidth="0.8" className="animate-whisker" />
+        <line x1="15" y1="63" x2="32" y2="63" stroke="#5a5a5a" strokeWidth="0.8" className="animate-whisker" />
+        <line x1="15" y1="68" x2="32" y2="66" stroke="#5a5a5a" strokeWidth="0.8" className="animate-whisker" />
 
         {/* Whiskers - Right */}
-        <line
-          x1="85"
-          y1="58"
-          x2="68"
-          y2="60"
-          stroke="#5a5a5a"
-          strokeWidth="0.8"
-          className="animate-whisker"
-        />
-        <line
-          x1="85"
-          y1="63"
-          x2="68"
-          y2="63"
-          stroke="#5a5a5a"
-          strokeWidth="0.8"
-          className="animate-whisker"
-        />
-        <line
-          x1="85"
-          y1="68"
-          x2="68"
-          y2="66"
-          stroke="#5a5a5a"
-          strokeWidth="0.8"
-          className="animate-whisker"
-        />
+        <line x1="85" y1="58" x2="68" y2="60" stroke="#5a5a5a" strokeWidth="0.8" className="animate-whisker" />
+        <line x1="85" y1="63" x2="68" y2="63" stroke="#5a5a5a" strokeWidth="0.8" className="animate-whisker" />
+        <line x1="85" y1="68" x2="68" y2="66" stroke="#5a5a5a" strokeWidth="0.8" className="animate-whisker" />
       </svg>
     </div>
   );

@@ -13,10 +13,10 @@ todos:
     status: done
   - id: audio-amplitude
     content: Create useAudioAmplitude hook with AnalyserNode for real-time analysis
-    status: pending
+    status: done
   - id: modify-audio-stream
     content: Update useAudioStream to connect AnalyserNode to audio graph
-    status: pending
+    status: done
     dependencies:
       - audio-amplitude
 ---
