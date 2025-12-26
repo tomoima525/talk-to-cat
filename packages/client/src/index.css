@@ -43,20 +43,40 @@
   }
 }
 
+@keyframes tail-wave {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(8deg);
+  }
+  50% {
+    transform: rotate(0deg);
+  }
+  75% {
+    transform: rotate(-8deg);
+  }
+}
+
 .animate-breathe {
   animation: breathe 4s ease-in-out infinite;
 }
 
 .animate-ear-twitch-left {
-  transform-origin: 35px 35px;
+  transform-origin: 28px 36px;
   animation: ear-twitch-left 8s ease-in-out infinite;
 }
 
 .animate-ear-twitch-right {
-  transform-origin: 65px 35px;
+  transform-origin: 60px 36px;
   animation: ear-twitch-right 8s ease-in-out infinite;
 }
 
 .animate-whisker {
   animation: whisker-wiggle 3s ease-in-out infinite;
+}
+
+.animate-tail-wave {
+  transform-origin: 128px 75px;
+  animation: tail-wave 5s ease-in-out infinite;
 }
