@@ -40,7 +40,7 @@ export async function handleFunctionCallArguments(
   try {
     switch (name) {
       case "generate_random_number": {
-        const { min, max } = JSON.parse(message.arguments);
+        const { min, max } = JSON.parse(message.arguments || "{}");
         if (typeof min !== "number" || typeof max !== "number") {
           throw new Error("Invalid arguments");
         }

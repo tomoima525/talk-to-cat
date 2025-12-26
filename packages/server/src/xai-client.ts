@@ -111,7 +111,7 @@ export class XAIClient {
               content: [
                 {
                   type: "input_text",
-                  text: "Greet me briefly.",
+                  text: `Introduce yourself briefly and say, 'I might help you or not help you because I'm lazy.'`,
                 },
               ],
             },

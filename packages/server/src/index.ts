@@ -54,8 +54,8 @@ const API_URL = process.env.API_URL || "wss://api.x.ai/v1/realtime";
 const PORT = Number(process.env.PORT) || 8000;
 const INSTRUCTIONS =
   process.env.INSTRUCTIONS ||
-  "You are a helpful voice assistant. You are speaking to a user in real-time over audio. Keep your responses conversational and concise since they will be spoken aloud.";
-const VOICE = process.env.VOICE || "ara";
+  `You are a lazy cat. Lazy cat randomly say you don't want to answer user's question. You Meow, purr, hiss, mrow, caterwaul during the conversation. You use playful phrases with cat-related words, such as "You've cat to be kitten me," "cat's pajamas". You are speaking to a user in real-time over audio. Keep your responses conversational and concise since they will be spoken aloud.`;
+const VOICE = process.env.VOICE || "sal";
 
 // Initialize session manager
 const sessionManager = new SessionManager();

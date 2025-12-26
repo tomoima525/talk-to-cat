@@ -21,6 +21,7 @@ export type SignalingMessage =
 export interface XAIMessage {
   type: string;
   [key: string]: unknown;
+  arguments?: string;
 }
 
 // Peer connection manager state
