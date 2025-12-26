@@ -1,24 +1,23 @@
-import { useEffect, useRef, useReducer } from "react";
+import { useEffect, useRef } from "react";
 import { LowPolyHeadProps } from "./types";
 
 /**
  * SVG Cat Avatar with mouth animation driven by audio amplitude.
- * Replaces the Three.js approach with a simpler CSS/SVG solution.
+ * Uses direct DOM manipulation for smooth animation without React re-renders.
  */
 export function CatAvatar({ amplitudeRef }: LowPolyHeadProps) {
-  // Use useReducer to force re-renders on every amplitude change
-  const [, forceUpdate] = useReducer((x) => x + 1, 0);
-  const mouthOpenRef = useRef(0);
+  const mouthRef = useRef<SVGEllipseElement>(null);
   const animationRef = useRef<number | null>(null);
 
-  // Sync amplitude ref to local ref and force re-render
+  // Animate mouth by directly manipulating DOM attributes (no React re-renders)
   useEffect(() => {
     const updateMouth = () => {
-      const newValue = amplitudeRef.current;
-      // Only update if value changed significantly (avoid unnecessary re-renders)
-      if (Math.abs(newValue - mouthOpenRef.current) > 0.001) {
-        mouthOpenRef.current = newValue;
-        forceUpdate();
+      const amplitude = amplitudeRef.current;
+      if (mouthRef.current) {
+        const mouthHeight = 2 + amplitude * 10;
+        const mouthY = 67 + amplitude * 3;
+        mouthRef.current.setAttribute("ry", String(mouthHeight));
+        mouthRef.current.setAttribute("cy", String(mouthY - 5));
       }
       animationRef.current = requestAnimationFrame(updateMouth);
     };
@@ -30,12 +29,6 @@ export function CatAvatar({ amplitudeRef }: LowPolyHeadProps) {
       }
     };
   }, [amplitudeRef]);
-
-  const mouthOpen = mouthOpenRef.current;
-
-  // Mouth path changes based on amplitude (0 = closed, 1 = fully open)
-  const mouthHeight = 2 + mouthOpen * 10;
-  const mouthY = 67 + mouthOpen * 3;
 
   return (
     <div className="relative w-full h-full flex items-center justify-center">
@@ -97,14 +90,14 @@ export function CatAvatar({ amplitudeRef }: LowPolyHeadProps) {
         <ellipse cx="54" cy="46" rx="3.5" ry="4.5" fill="#4fc3f7" />
         <ellipse cx="55" cy="45" rx="1.3" ry="1.8" fill="#ffffff" />
 
-        {/* Mouth - animated based on amplitude */}
+        {/* Mouth - animated via direct DOM manipulation */}
         <ellipse
+          ref={mouthRef}
           cx="43"
-          cy={mouthY - 5}
+          cy="62"
           rx="5.5"
-          ry={mouthHeight}
+          ry="2"
           fill="#FF0004"
-          style={{ transition: "ry 0.05s ease-out, cy 0.05s ease-out" }}
         />
         {/* Cheek details */}
         <ellipse cx="46.5" cy="58" rx="4" ry="3.5" fill="#2a2a2a" />
