@@ -10,7 +10,8 @@
       "Bash(pnpm build:*)",
       "Bash(pnpm --filter @xai-avatar/client add:*)",
       "Bash(pnpm --filter @xai-avatar/client add -D @types/three)",
-      "Bash(pnpm build:client:*)"
+      "Bash(pnpm build:client:*)",
+      "Bash(pnpm lint:client:*)"
     ]
   }
 }

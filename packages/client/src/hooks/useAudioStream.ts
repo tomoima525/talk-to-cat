@@ -4,6 +4,7 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { float32ToPCM16Base64, base64PCM16ToFloat32 } from "../utils/audio";
+import audioCaptureProcessorUrl from "../utils/audio-capture-processor.ts?url";
 
 const CHUNK_DURATION_MS = 100;
 
@@ -35,7 +36,8 @@ export function useAudioStream({ createAnalyser }: UseAudioStreamOptions = {}): 
   const analyserNodeRef = useRef<AnalyserNode | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const sourceNodeRef = useRef<MediaStreamAudioSourceNode | null>(null);
-  const processorNodeRef = useRef<ScriptProcessorNode | null>(null);
+  const workletNodeRef = useRef<AudioWorkletNode | null>(null);
+  const workletRegisteredRef = useRef(false);
   const playbackQueueRef = useRef<Float32Array[]>([]);
   const isPlayingRef = useRef(false);
   const currentPlaybackSourceRef = useRef<AudioBufferSourceNode | null>(null);
@@ -84,57 +86,38 @@ export function useAudioStream({ createAnalyser }: UseAudioStreamOptions = {}): 
           await audioContext.resume();
         }
 
+        // Register AudioWorklet module (once per context)
+        if (!workletRegisteredRef.current) {
+          //  await audioContext.audioWorklet.addModule("/audio-capture-processor.js");
+          await audioContext.audioWorklet.addModule(audioCaptureProcessorUrl);
+          workletRegisteredRef.current = true;
+          console.log("AudioWorklet module registered");
+        }
+
         // Create source from microphone
         const source = audioContext.createMediaStreamSource(stream);
         sourceNodeRef.current = source;
 
-        // Create script processor for audio chunks
-        const bufferSize = 4096;
-        const processor = audioContext.createScriptProcessor(bufferSize, 1, 1);
+        // Create AudioWorklet node for audio processing
+        const chunkSizeSamples = Math.floor((nativeSampleRate * CHUNK_DURATION_MS) / 1000);
+        const workletNode = new AudioWorkletNode(audioContext, "audio-capture-processor", {
+          processorOptions: {
+            chunkSizeSamples,
+          },
+        });
 
-        const audioBuffer: Float32Array[] = [];
-        let totalSamples = 0;
-        const chunkSizeSamples = (nativeSampleRate * CHUNK_DURATION_MS) / 1000;
+        // Handle messages from AudioWorklet
+        workletNode.port.onmessage = (event: MessageEvent) => {
+          if (event.data.type === "audioData") {
+            const chunk = event.data.audioData as Float32Array;
 
-        processor.onaudioprocess = (event) => {
-          const inputData = event.inputBuffer.getChannelData(0);
-
-          // Calculate audio level
-          let sum = 0;
-          for (let i = 0; i < inputData.length; i++) {
-            sum += inputData[i] * inputData[i];
-          }
-          const rms = Math.sqrt(sum / inputData.length);
-          setAudioLevel(rms);
-
-          // Buffer audio data
-          audioBuffer.push(new Float32Array(inputData));
-          totalSamples += inputData.length;
-
-          // Send chunks of ~100ms
-          while (totalSamples >= chunkSizeSamples) {
-            const chunk = new Float32Array(chunkSizeSamples);
-            let offset = 0;
-
-            while (offset < chunkSizeSamples && audioBuffer.length > 0) {
-              const buffer = audioBuffer[0];
-              const needed = chunkSizeSamples - offset;
-              const available = buffer.length;
-
-              if (available <= needed) {
-                // Use entire buffer
-                chunk.set(buffer, offset);
-                offset += available;
-                totalSamples -= available;
-                audioBuffer.shift();
-              } else {
-                // Use part of buffer
-                chunk.set(buffer.subarray(0, needed), offset);
-                audioBuffer[0] = buffer.subarray(needed);
-                offset += needed;
-                totalSamples -= needed;
-              }
+            // Calculate audio level on main thread
+            let sum = 0;
+            for (let i = 0; i < chunk.length; i++) {
+              sum += chunk[i] * chunk[i];
             }
+            const rms = Math.sqrt(sum / chunk.length);
+            setAudioLevel(rms);
 
             // Convert to PCM16 and send
             const base64Audio = float32ToPCM16Base64(chunk);
@@ -142,11 +125,11 @@ export function useAudioStream({ createAnalyser }: UseAudioStreamOptions = {}): 
           }
         };
 
-        processorNodeRef.current = processor;
+        workletNodeRef.current = workletNode;
 
         // Connect nodes
-        source.connect(processor);
-        processor.connect(audioContext.destination);
+        source.connect(workletNode);
+        workletNode.connect(audioContext.destination);
 
         setIsCapturing(true);
         console.log(`Audio capture started at ${nativeSampleRate}Hz (native)`);
@@ -163,9 +146,11 @@ export function useAudioStream({ createAnalyser }: UseAudioStreamOptions = {}): 
 
   // Stop audio capture
   const stopCapture = useCallback(() => {
-    if (processorNodeRef.current) {
-      processorNodeRef.current.disconnect();
-      processorNodeRef.current = null;
+    // Signal the worklet to stop processing
+    if (workletNodeRef.current) {
+      workletNodeRef.current.port.postMessage({ type: "stop" });
+      workletNodeRef.current.disconnect();
+      workletNodeRef.current = null;
     }
 
     if (sourceNodeRef.current) {
