@@ -23,26 +23,16 @@ export function Transcript({ entries }: TranscriptProps) {
   }
 
   return (
-    <div
-      ref={scrollRef}
-      className="flex-1 overflow-y-auto p-4 space-y-4"
-    >
+    <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4">
       {entries.map((entry, index) => (
-        <div
-          key={index}
-          className={`flex ${entry.role === "user" ? "justify-end" : "justify-start"}`}
-        >
+        <div key={index} className={`flex ${entry.role === "user" ? "justify-end" : "justify-start"}`}>
           <div
             className={`max-w-[80%] rounded-lg px-4 py-2 ${
-              entry.role === "user"
-                ? "bg-blue-600 text-white"
-                : "bg-gray-700 text-gray-100"
+              entry.role === "user" ? "bg-blue-600 text-white" : "bg-gray-700 text-gray-100"
             }`}
           >
-            <p className="text-sm whitespace-pre-wrap">{entry.content}</p>
-            <span className="text-xs opacity-60 mt-1 block">
-              {new Date(entry.timestamp).toLocaleTimeString()}
-            </span>
+            <p className="text-lg whitespace-pre-wrap">{entry.content}</p>
+            <span className="text-xs opacity-60 mt-1 block">{new Date(entry.timestamp).toLocaleTimeString()}</span>
           </div>
         </div>
       ))}
