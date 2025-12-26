@@ -1,4 +1,8 @@
-# XAI Avatar
+Talk to a lazy cat voice assistant who might help you or not help you.
+
+<img width="1212" height="711" alt="cat" src="https://github.com/user-attachments/assets/25fa9c2b-f8ba-4550-8377-420b99b1e6d7" />
+
+## Structure
 
 A monorepo project for XAI Voice WebRTC integration with a Hono server and Vite + React client.
 
@@ -34,7 +38,7 @@ Create a `.env` file in `packages/server/`:
 | `XAI_API_KEY` | Your XAI API key | Required |
 | `API_URL` | XAI realtime API URL | `wss://api.x.ai/v1/realtime` |
 | `PORT` | Server port | `8000` |
-| `VOICE` | Voice model to use | `ara` |
+| `VOICE` | Voice model to use | `sal` |
 | `INSTRUCTIONS` | System instructions for the voice assistant | Default prompt |
 | `ALLOWED_ORIGINS` | CORS allowed origins | `http://localhost:3000,http://localhost:5173,http://localhost:8080` |
 
